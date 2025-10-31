@@ -8,7 +8,7 @@ Complete checklist for implementing the EcoGlobal sustainable products platform.
 
 ### 0.0 AGENTS.md
 
-- [ ] Create comprehensive AGENTS.md for use by AI agents, with main principles. Don't include anything about the domain. Just the architecture.
+- [x] Create comprehensive AGENTS.md for use by AI agents, with main principles. Don't include anything about the domain. Just the architecture.
 
 ### 0.1 Repository Structure
 - [ ] Create root project structure with `build-logic`, `common`, `ecoglobal` folders
