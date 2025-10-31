@@ -11,19 +11,18 @@ Complete checklist for implementing the EcoGlobal sustainable products platform.
 - [x] Create comprehensive AGENTS.md for use by AI agents, with main principles. Don't include anything about the domain. Just the architecture.
 
 ### 0.1 Repository Structure
-- [ ] Create root project structure with `build-logic`, `common`, `ecoglobal` folders
-- [ ] Set up `build-logic` folder with convention plugins
+- [x] Create root project structure with `build-logic`, `common`, `ecoglobal` folders
+- [x] Set up `build-logic` folder with convention plugins
 - [ ] Create `buildlogic.kotlin-conventions.gradle.kts`
 - [ ] Create `buildlogic.cucumber-conventions.gradle.kts`
 - [ ] Create `buildlogic.jacoco-conventions.gradle.kts`
-- [ ] Create `buildlogic.pitest-conventions.gradle.kts`
 - [ ] Create `buildlogic.errorprone.gradle.kts`
 - [ ] Create `buildlogic.project-root.gradle.kts`
 - [ ] Create `libs.versions.toml` with all dependencies
-- [ ] Create root `build.gradle.kts`
-- [ ] Create root `settings.gradle.kts` (initially empty, will add modules as we go)
-- [ ] Create `gradle.properties` with configuration
-- [ ] Create `.gitignore`
+- [x] Create root `build.gradle.kts`
+- [x] Create root `settings.gradle.kts` (initially empty, will add modules as we go)
+- [x] Create `gradle.properties` with configuration
+- [x] Create `.gitignore`
 
 ### 0.2 Docker Infrastructure
 - [ ] Create `docker/compose.yaml` with PostgreSQL
