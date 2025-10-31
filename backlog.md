@@ -25,20 +25,20 @@ Complete checklist for implementing the EcoGlobal sustainable products platform.
 - [x] Create `.gitignore`
 
 ### 0.2 Docker Infrastructure
-- [ ] Create `docker/compose.yaml` with PostgreSQL
-- [ ] Create `docker/compose.yaml` with ActiveMQ
-- [ ] Create `docker/sql/init.sql` for database initialization
-- [ ] Create `.env.example` for environment variables
-- [ ] Test: `docker compose up` starts successfully
+- [x] Create `docker/compose.yaml` with PostgreSQL
+- [x] Create `docker/compose.yaml` with ActiveMQ
+- [x] Create `docker/sql/init.sql` for database initialization
+- [x] Create `.env.example` for environment variables
+- [x] Test: `docker compose up` starts successfully
 
 ### 0.3 Application Module
-- [ ] Create `ecoglobal/application` module structure
-- [ ] Create `build.gradle.kts` for application module
-- [ ] Create `Application.kt` with Spring Boot main class
-- [ ] Create `SecurityConfig.kt` (basic setup, no authentication yet)
-- [ ] Create `application.yaml` with basic configuration
-- [ ] Create `application-test.yaml` for test profile
-- [ ] Test: Application starts successfully
+- [x] Create `ecoglobal/application` module structure
+- [x] Create `build.gradle.kts` for application module
+- [x] Create `Application.kt` with Spring Boot main class
+- [x] Create `SecurityConfig.kt` (basic setup, no authentication yet)
+- [x] Create `application.yaml` with basic configuration
+- [x] Create `application-test.yaml` for test profile
+- [x] Test: Application starts successfully
 
 ### 0.4 Test Infrastructure
 - [ ] Create `ecoglobal/test/use-case` module structure

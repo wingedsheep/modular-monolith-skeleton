@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:16.2-alpine
+    shm_size: 256mb
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-ecoglobal}
+      - POSTGRES_USER=${POSTGRES_USER:-ecoglobal}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ecoglobal}
+    volumes:
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ecoglobal-postgres-data:/var/lib/postgresql/data
+  activemq:
+    image: apache/activemq-classic:6.1.0
+    ports:
+      - "${ACTIVEMQ_WEB_PORT:-8161}:8161"
+      - "${ACTIVEMQ_STOMP_PORT:-61613}:61613"
+      - "${ACTIVEMQ_OPENWIRE_PORT:-61616}:61616"
+    environment:
+      - ACTIVEMQ_CONFIG_MINMEMORY=256
+      - ACTIVEMQ_CONFIG_MAXMEMORY=1024
+      - STOMP_PORT=61613
+    volumes:
+      - ecoglobal-activemq-data:/opt/apache-activemq/data
+
+volumes:
+  ecoglobal-postgres-data:
+  ecoglobal-activemq-data:

@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: EcoGlobal
+  datasource:
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-ecoglobal}
+    username: ${POSTGRES_USER:-ecoglobal}
+    password: ${POSTGRES_PASSWORD:-ecoglobal}
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    schemas: product-catalog,inventory,order-fulfillment,logistics,carbon-accounting,tax-compliance,payment
+  activemq:
+    broker-url: tcp://localhost:${ACTIVEMQ_OPENWIRE_PORT:-61616}
+    user: admin
+    password: admin
+server:
+  port: 8080
