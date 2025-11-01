@@ -50,11 +50,11 @@ Complete checklist for implementing the EcoGlobal sustainable products platform.
 - [x] Test: Cucumber runner executes (with no features yet)
 
 ### 0.5 Documentation
-- [ ] Create `README.md` with project overview
-- [ ] Create `docs/ARCHITECTURE.md` describing bounded contexts
-- [ ] Create `docs/GETTING_STARTED.md` with setup instructions
-- [ ] Create `docs/STRATEGIC_DESIGN.md` with domain classification
-- [ ] Create `Justfile` with common commands
+- [x] Create `README.md` with project overview
+- [x] Create `docs/ARCHITECTURE.md` describing bounded contexts
+- [x] Create `docs/GETTING_STARTED.md` with setup instructions
+- [x] Create `docs/STRATEGIC_DESIGN.md` with domain classification
+- [x] Create `Justfile` with common commands
 
 ---
 
