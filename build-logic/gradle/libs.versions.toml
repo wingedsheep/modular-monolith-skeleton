@@ -1,0 +1,17 @@
+[versions]
+arcmutate-pitest = "2.2.3"
+dependency-analysis = "3.1.0"
+kotlin = "2.2.20"
+spring-boot = "3.5.4"
+
+[libraries]
+arcmutate-gradle-common = { module = "com.arcmutate.gradle:common", version.ref = "arcmutate-pitest" }
+
+[plugins]
+arcmutate-github = { id = "com.arcmutate.github", version.ref = "arcmutate-pitest" }
+dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "dependency-analysis" }
+download = { id = "de.undercouch.download", version = "5.6.0" }
+errorprone = { id = "net.ltgt.errorprone", version = "4.3.0" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+pitest = { id = "info.solidsoft.pitest", version = "1.15.0" }

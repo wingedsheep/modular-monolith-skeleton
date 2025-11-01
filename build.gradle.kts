@@ -1,8 +1,21 @@
 plugins {
-    // Apply the Kotlin JVM plugin to all projects that need it.
-    kotlin("jvm") version "1.9.22" apply false
-    // Apply the Spring Boot plugin to the application project.
-    id("org.springframework.boot") version "3.2.0" apply false
-    // Apply the Spring Dependency Management plugin to manage dependency versions.
-    id("io.spring.dependency-management") version "1.1.4" apply false
+    jacoco
+    alias(libs.plugins.spring.boot) apply false
+    alias(libs.plugins.spring.dependency.management)
+    id("buildlogic.project-root")
+}
+
+group = "com.example"
+version = project.findProperty("version") ?: "0.0.1-SNAPSHOT"
+
+extra["kotlin.version"] = libs.versions.kotlin.get()
+
+subprojects {
+    apply(plugin = "io.spring.dependency-management")
+
+    dependencyManagement {
+        imports {
+            mavenBom(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+        }
+    }
 }

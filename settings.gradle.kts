@@ -1,5 +1,9 @@
+pluginManagement {
+    includeBuild("build-logic")
+}
+
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    @Suppress("UnstableApiUsage")
     repositories {
         mavenCentral()
     }
@@ -7,7 +11,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "EcoGlobal"
 
-includeBuild("build-logic")
 includeBuild("common")
 
 // Deployable with its domains
@@ -15,3 +18,4 @@ include(":app:application")
 include(":app:sample-domain:sample-domain-api")
 include(":app:sample-domain:sample-domain-impl")
 include(":ecoglobal:application")
+include(":ecoglobal:test:use-case")
