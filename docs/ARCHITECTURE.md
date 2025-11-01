@@ -21,18 +21,18 @@ Before creating modules, classify your domains:
 **Core Domain** (your competitive advantage)
 - Contains your unique business logic
 - Should have ZERO dependencies on other domains
-- Example: `imbalance-calculation`, `trading-strategy`
+- Example: `order-fulfillment`, `carbon-accounting`
 
 **Supporting Domains** (necessary but not differentiating)
 - Support the core domain
 - Can depend on generic domains
 - Cannot be depended upon by core domain
-- Example: `allocation`, `metering-data`
+- Example: `product-catalog`, `inventory-management`, `logistics`
 
 **Generic Subdomains** (could be bought or reused)
 - Highly reusable, domain-agnostic
 - Can be depended upon by any domain
-- Example: `common-time`, `common-ean`, `notifications`
+- Example: `common-country`, `common-identity`, `notifications`
 
 ### 1.2 Dependency Rules
 
@@ -69,20 +69,20 @@ Before creating modules, classify your domains:
 ### 2.1 Root Structure
 
 ```
-project-root/
+ecoglobal-platform/
 ├── build-logic/                           # Gradle conventions
 ├── common/                                # Generic subdomains
-│   ├── common-time/
-│   ├── common-ean/
+│   ├── common-country/
+│   ├── common-identity/
 │   └── common-data-jdbc/
-├── [deployable-name]/                     # e.g., "nma", "trader"
-│   ├── application/                       # Application layer
-│   ├── [domain-name]/                     # Bounded context
-│   │   ├── [domain-name]-api/            # Public API
-│   │   └── [domain-name]-impl/           # Implementation
-│   │       ├── application/              # Use cases
-│   │       ├── domain/                   # Domain model
-│   │       └── infrastructure/           # Technical concerns
+├── ecoglobal/                             # The deployable application
+│   ├── application/                       # Application layer (Spring Boot main)
+│   ├── order-fulfillment/                 # Bounded context (Core Domain)
+│   │   ├── order-fulfillment-api/
+│   │   └── order-fulfillment-impl/
+│   ├── product-catalog/                   # Bounded context (Supporting Domain)
+│   │   ├── product-catalog-api/
+│   │   └── product-catalog-impl/
 │   └── test/
 │       └── use-case/                     # Cucumber tests
 ├── build.gradle.kts
@@ -94,16 +94,18 @@ project-root/
 
 **settings.gradle.kts:**
 ```kotlin
-rootProject.name = "your-project-name"
+rootProject.name = "ecoglobal-platform"
 
 includeBuild("build-logic")
 includeBuild("common")
 
-// Deployable with its domains
-include(":deployable-name:application")
-include(":deployable-name:domain-name:domain-name-api")
-include(":deployable-name:domain-name:domain-name-impl")
-include(":deployable-name:test:use-case")
+// EcoGlobal deployable with its domains
+include(":ecoglobal:application")
+include(":ecoglobal:order-fulfillment:order-fulfillment-api")
+include(":ecoglobal:order-fulfillment:order-fulfillment-impl")
+include(":ecoglobal:product-catalog:product-catalog-api")
+include(":ecoglobal:product-catalog:product-catalog-impl")
+include(":ecoglobal:test:use-case")
 ```
 
 ---
@@ -116,27 +118,27 @@ Generic subdomains are the foundation. They:
 - Can be depended upon by everyone
 - Should be very stable
 
-### 3.1 Example: common-ean
+### 3.1 Example: common-country
 
-**common/common-ean/build.gradle.kts:**
+**common/common-country/build.gradle.kts:**
 ```kotlin
 plugins {
     id("buildlogic.kotlin-conventions")
 }
 ```
 
-**Ean18.kt (Value Object):**
+**CountryCode.kt (Value Object):**
 ```kotlin
-package com.company.common.ean
+package com.ecoglobal.common.country
 
 /**
- * EAN-18 identifier for electricity connections.
+ * ISO 3166-1 alpha-2 country code.
  * Immutable value object with built-in validation.
  */
-data class Ean18(val value: String) {
+data class CountryCode(val value: String) {
     init {
-        require(value.length == 18) { "EAN18 must be exactly 18 characters, got ${value.length}" }
-        require(value.all { it.isDigit() }) { "EAN18 must contain only digits" }
+        require(value.length == 2) { "Country code must be 2 characters" }
+        require(value.all { it.isUpperCase() }) { "Country code must be upper case" }
     }
     
     override fun toString(): String = value
@@ -154,37 +156,37 @@ data class Ean18(val value: String) {
 Each bounded context has clear layers:
 
 ```
-domain-name-impl/
-├── application/              # Application Layer (Use Cases)
-│   ├── CreateAllocationUseCase.kt
-│   └── CalculateDailyTotalsUseCase.kt
-├── domain/                   # Domain Layer
-│   ├── model/               # Aggregates, Entities, Value Objects
-│   │   ├── Allocation.kt
-│   │   ├── AllocationId.kt
-│   │   └── Quantity.kt
-│   ├── service/             # Domain Services
-│   │   └── AllocationCalculator.kt
-│   └── repository/          # Repository Interfaces
-│       └── AllocationRepository.kt
-└── infrastructure/           # Infrastructure Layer
+product-catalog-impl/
+├── application/
+│   ├── AddProductUseCase.kt
+│   └── GetProductDetailsUseCase.kt
+├── domain/
+│   ├── model/
+│   │   ├── Product.kt
+│   │   ├── ProductId.kt
+│   │   └── Weight.kt
+│   ├── service/
+│   │   └── ProductValidator.kt
+│   └── repository/
+│       └── ProductRepository.kt
+└── infrastructure/
     ├── persistence/
-    │   ├── AllocationEntity.kt
-    │   ├── AllocationRepositoryJdbc.kt
-    │   └── AllocationEntityMappers.kt
+    │   ├── ProductEntity.kt
+    │   ├── ProductRepositoryJdbc.kt
+    │   └── ProductEntityMappers.kt
     ├── rest/
     │   └── v1/
-    │       ├── AllocationControllerV1.kt
-    │       └── AllocationDtos.kt
+    │       ├── ProductControllerV1.kt
+    │       └── ProductDtos.kt
     └── messaging/
-        └── AllocationEventPublisher.kt
+        └── ProductEventPublisher.kt
 ```
 
 ### 4.2 API Module (Public Interface)
 
 The API module defines what other bounded contexts can use:
 
-**domain-name-api/build.gradle.kts:**
+**product-catalog-api/build.gradle.kts:**
 ```kotlin
 plugins {
     id("buildlogic.kotlin-conventions")
@@ -192,8 +194,7 @@ plugins {
 
 dependencies {
     // ONLY common/generic dependencies allowed
-    api("com.company.common:time")
-    api("com.company.common:ean")
+    api("com.ecoglobal.common:country")
 }
 ```
 
@@ -211,39 +212,36 @@ dependencies {
 
 **Example Query Service (only when needed):**
 ```kotlin
-package com.company.allocation
+package com.ecoglobal.productcatalog
 
-import com.company.common.time.DayNL
-import com.company.common.ean.Ean18
+import com.ecoglobal.common.country.CountryCode
 
 /**
- * Query interface for other domains to retrieve allocation data.
- * Only expose this if other domains NEED to query allocations.
- * Default: don't expose query services unless necessary.
+ * Query interface for other domains to retrieve product data.
  */
-interface AllocationQueryService {
-    fun findTotalForDay(day: DayNL): List<AllocationTotal>
+interface ProductQueryService {
+    fun findAvailableIn(countryCode: CountryCode): List<ProductSummary>
 }
 
-data class AllocationTotal(
-    val ean18: Ean18,
-    val totalKwh: Double
+data class ProductSummary(
+    val productId: ProductId,
+    val name: String
 )
 ```
 
 **Domain Event:**
 ```kotlin
-package com.company.allocation
+package com.ecoglobal.productcatalog
 
-import com.company.common.time.DayNL
+import com.ecoglobal.common.country.CountryCode
 
 /**
- * Published when allocation processing completes.
+ * Published when a product's details change.
  * Other domains can react to this event.
  */
-data class AllocationCompleteEvent(
-    val operatingDay: DayNL,
-    val allocationCount: Int
+data class ProductUpdatedEvent(
+    val productId: ProductId,
+    val availableInCountries: Set<CountryCode>
 )
 ```
 
@@ -253,7 +251,7 @@ data class AllocationCompleteEvent(
 
 ### 5.1 Build Configuration
 
-**domain-name-impl/build.gradle.kts:**
+**product-catalog-impl/build.gradle.kts:**
 ```kotlin
 plugins {
     id("buildlogic.kotlin-conventions")
@@ -262,15 +260,14 @@ plugins {
 
 dependencies {
     // Own API
-    api(project(":deployable-name:domain-name:domain-name-api"))
+    api(project(":ecoglobal:product-catalog:product-catalog-api"))
     
     // Direct dependencies on generic domains (NO dependency inversion)
-    implementation("com.company.common:time")
-    implementation("com.company.common:ean")
+    implementation("com.ecoglobal.common:country")
     
     // Direct dependencies on other domains IF strategic design allows
-    // Supporting domain can depend on another supporting domain directly
-    implementation(project(":deployable-name:meter-data:meter-data-api"))
+    // e.g., Logistics might depend on Product Catalog to get weights
+    // implementation(project(":ecoglobal:logistics:logistics-api"))
     
     // Use dependency inversion ONLY if core domain needs supporting domain
     // In that case, define interface in core-api and implement in supporting-impl
@@ -281,7 +278,7 @@ dependencies {
     implementation("jakarta.jms:jakarta.jms-api")
     
     // Testing
-    testImplementation(project(":deployable-name:application"))
+    testImplementation(project(":ecoglobal:application"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 ```
@@ -290,118 +287,122 @@ dependencies {
 
 #### 5.2.1 Aggregates
 
-**Allocation.kt (Aggregate Root):**
+**Product.kt (Aggregate Root):**
 ```kotlin
-package com.company.allocation.domain.model
+package com.ecoglobal.productcatalog.domain.model
 
-import com.company.common.time.DayNL
-import com.company.common.ean.Ean18
+import com.ecoglobal.common.country.CountryCode
 
 /**
- * Allocation aggregate root.
- * Represents energy allocation for a connection on a specific day.
- * 
+ * Product aggregate root.
+ * Represents a sellable item in the catalog.
+ *
  * Aggregate invariants:
- * - Quantity must be non-negative
- * - Cannot modify after finalized
+ * - Weight must be non-negative.
+ * - Product must have a name.
  */
-data class Allocation private constructor(
-    val id: AllocationId?,
-    val ean18: Ean18,
-    val operatingDay: DayNL,
-    val quantity: Quantity,
-    val status: AllocationStatus
+data class Product private constructor(
+    val id: ProductId?,
+    val name: String,
+    val description: String,
+    val weight: Weight,
+    val status: ProductStatus,
+    val availableIn: Set<CountryCode>
 ) {
     companion object {
         fun create(
-            ean18: Ean18,
-            operatingDay: DayNL,
-            quantity: Quantity
-        ): Allocation {
-            require(quantity.value >= 0.0) { "Quantity cannot be negative" }
+            name: String,
+            description: String,
+            weight: Weight,
+            availableIn: Set<CountryCode>
+        ): Product {
+            require(name.isNotBlank()) { "Product name cannot be blank" }
+            require(weight.valueGrams >= 0) { "Weight cannot be negative" }
             
-            return Allocation(
+            return Product(
                 id = null,
-                ean18 = ean18,
-                operatingDay = operatingDay,
-                quantity = quantity,
-                status = AllocationStatus.DRAFT
+                name = name,
+                description = description,
+                weight = weight,
+                status = ProductStatus.DRAFT,
+                availableIn = availableIn
             )
         }
     }
     
-    fun finalize(): Allocation {
-        check(status == AllocationStatus.DRAFT) { "Can only finalize draft allocations" }
-        return copy(status = AllocationStatus.FINALIZED)
+    fun publish(): Product {
+        check(status == ProductStatus.DRAFT) { "Can only publish draft products" }
+        return copy(status = ProductStatus.PUBLISHED)
     }
     
-    fun adjustQuantity(newQuantity: Quantity): Allocation {
-        check(status == AllocationStatus.DRAFT) { "Cannot modify finalized allocation" }
-        require(newQuantity.value >= 0.0) { "Quantity cannot be negative" }
-        return copy(quantity = newQuantity)
+    fun updateAvailability(newAvailability: Set<CountryCode>): Product {
+        check(status != ProductStatus.DISCONTINUED) { "Cannot modify discontinued product" }
+        return copy(availableIn = newAvailability)
     }
 }
 ```
 
-**AllocationId.kt (Value Object):**
+**ProductId.kt (Value Object):**
 ```kotlin
-package com.company.allocation.domain.model
+package com.ecoglobal.productcatalog.domain.model
 
-data class AllocationId(val value: Long) {
-    init {
-        require(value > 0) { "AllocationId must be positive" }
+import java.util.UUID
+
+data class ProductId(val value: UUID) {
+    companion object {
+        fun generate() = ProductId(UUID.randomUUID())
     }
 }
 ```
 
-**Quantity.kt (Value Object):**
+**Weight.kt (Value Object):**
 ```kotlin
-package com.company.allocation.domain.model
+package com.ecoglobal.productcatalog.domain.model
 
 /**
- * Energy quantity in kWh.
+ * Product weight in grams.
  * Immutable value object.
  */
-data class Quantity(val value: Double) {
+data class Weight(val valueGrams: Int) {
     init {
-        require(value.isFinite()) { "Quantity must be finite" }
+        require(valueGrams >= 0) { "Weight must be non-negative" }
     }
     
-    operator fun plus(other: Quantity): Quantity = Quantity(value + other.value)
-    operator fun minus(other: Quantity): Quantity = Quantity(value - other.value)
+    operator fun plus(other: Weight): Weight = Weight(valueGrams + other.valueGrams)
     
     companion object {
-        val ZERO = Quantity(0.0)
+        val ZERO = Weight(0)
     }
 }
 ```
 
-**AllocationStatus.kt:**
+**ProductStatus.kt:**
 ```kotlin
-package com.company.allocation.domain.model
+package com.ecoglobal.productcatalog.domain.model
 
-enum class AllocationStatus {
+enum class ProductStatus {
     DRAFT,
-    FINALIZED
+    PUBLISHED,
+    DISCONTINUED
 }
 ```
 
 #### 5.2.2 Repository Interface (in domain layer)
 
 ```kotlin
-package com.company.allocation.domain.repository
+package com.ecoglobal.productcatalog.domain.repository
 
-import com.company.allocation.domain.model.*
-import com.company.common.time.DayNL
+import com.ecoglobal.productcatalog.domain.model.*
+import com.ecoglobal.common.country.CountryCode
 
 /**
- * Repository for Allocation aggregate.
+ * Repository for Product aggregate.
  * Interface defined in domain layer, implemented in infrastructure.
  */
-interface AllocationRepository {
-    fun save(allocation: Allocation): Allocation
-    fun findById(id: AllocationId): Allocation?
-    fun findByDay(day: DayNL): List<Allocation>
+interface ProductRepository {
+    fun save(product: Product): Product
+    fun findById(id: ProductId): Product?
+    fun findAvailableIn(country: CountryCode): List<Product>
 }
 ```
 
@@ -410,25 +411,26 @@ interface AllocationRepository {
 #### 5.2.3 Domain Services
 
 ```kotlin
-package com.company.allocation.domain.service
+package com.ecoglobal.productcatalog.domain.service
 
-import com.company.allocation.domain.model.*
+import com.ecoglobal.productcatalog.domain.model.*
+import com.ecoglobal.common.country.CountryCode
 
 /**
- * Domain service for allocation calculations.
+ * Domain service for product validation logic.
  * Contains domain logic that doesn't belong to a single aggregate.
  */
-class AllocationCalculator {
-    
-    fun calculateTotal(allocations: List<Allocation>): Quantity {
-        return allocations
-            .map { it.quantity }
-            .fold(Quantity.ZERO) { acc, q -> acc + q }
-    }
-    
-    fun calculatePercentage(allocation: Allocation, total: Quantity): Double {
-        if (total.value == 0.0) return 0.0
-        return (allocation.quantity.value / total.value) * 100.0
+class ProductValidator(
+    private val countryConfigProvider: CountryConfigProvider // From a generic domain
+) {
+    fun canBeSoldIn(product: Product, country: CountryCode): Boolean {
+        if (!product.availableIn.contains(country)) {
+            return false
+        }
+
+        // Example of a more complex rule
+        val requiredCerts = countryConfigProvider.getRequiredCertifications(country)
+        return product.certifications.containsAll(requiredCerts)
     }
 }
 ```
@@ -437,93 +439,86 @@ class AllocationCalculator {
 
 Application services orchestrate domain objects, handle transactions, and coordinate infrastructure.
 
-**CreateAllocationUseCase.kt:**
+**AddProductUseCase.kt:**
 ```kotlin
-package com.company.allocation.application
+package com.ecoglobal.productcatalog.application
 
-import com.company.allocation.domain.model.*
-import com.company.allocation.domain.repository.AllocationRepository
-import com.company.allocation.infrastructure.messaging.AllocationEventPublisher
-import com.company.common.time.DayNL
-import com.company.common.ean.Ean18
+import com.ecoglobal.productcatalog.domain.model.*
+import com.ecoglobal.productcatalog.domain.repository.ProductRepository
+import com.ecoglobal.productcatalog.infrastructure.messaging.ProductEventPublisher
+import com.ecoglobal.common.country.CountryCode
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 /**
- * Use case for creating a new allocation.
- * Orchestrates domain objects and infrastructure.
+ * Use case for adding a new product to the catalog.
  */
 @Service
-class CreateAllocationUseCase(
-    private val allocationRepository: AllocationRepository,
-    private val eventPublisher: AllocationEventPublisher
+class AddProductUseCase(
+    private val productRepository: ProductRepository,
+    private val eventPublisher: ProductEventPublisher
 ) {
     
     @Transactional
-    fun execute(command: CreateAllocationCommand): Result<AllocationId> {
+    fun execute(command: AddProductCommand): Result<ProductId> {
         return try {
-            // Create aggregate using factory method
-            val allocation = Allocation.create(
-                ean18 = command.ean18,
-                operatingDay = command.operatingDay,
-                quantity = command.quantity
+            val product = Product.create(
+                name = command.name,
+                description = command.description,
+                weight = command.weight,
+                availableIn = command.availableIn
             )
             
-            // Save via repository
-            val saved = allocationRepository.save(allocation)
-            val allocationId = requireNotNull(saved.id) { "Saved allocation must have ID" }
+            val saved = productRepository.save(product)
+            val productId = requireNotNull(saved.id) { "Saved product must have ID" }
             
-            // Publish domain event (if needed)
             eventPublisher.publishCreated(saved)
             
-            Result.success(allocationId)
+            Result.success(productId)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 }
 
-data class CreateAllocationCommand(
-    val ean18: Ean18,
-    val operatingDay: DayNL,
-    val quantity: Quantity
+data class AddProductCommand(
+    val name: String,
+    val description: String,
+    val weight: Weight,
+    val availableIn: Set<CountryCode>
 )
 ```
 
-**CalculateDailyTotalsUseCase.kt:**
+**GetProductDetailsUseCase.kt:**
 ```kotlin
-package com.company.allocation.application
+package com.ecoglobal.productcatalog.application
 
-import com.company.allocation.domain.repository.AllocationRepository
-import com.company.allocation.domain.service.AllocationCalculator
-import com.company.allocation.domain.model.Quantity
-import com.company.common.time.DayNL
+import com.ecoglobal.productcatalog.domain.repository.ProductRepository
+import com.ecoglobal.productcatalog.domain.model.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class CalculateDailyTotalsUseCase(
-    private val allocationRepository: AllocationRepository,
-    private val calculator: AllocationCalculator
+class GetProductDetailsUseCase(
+    private val productRepository: ProductRepository
 ) {
     
     @Transactional(readOnly = true)
-    fun execute(day: DayNL): DailyTotalsResult {
-        val allocations = allocationRepository.findByDay(day)
-        val total = calculator.calculateTotal(allocations)
-        
-        return DailyTotalsResult(
-            day = day,
-            count = allocations.size,
-            total = total
-        )
+    fun execute(productId: ProductId): ProductDetailsResult? {
+        return productRepository.findById(productId)?.let {
+            ProductDetailsResult(
+                id = it.id!!,
+                name = it.name,
+                status = it.status
+            )
+        }
     }
 }
 
-data class DailyTotalsResult(
-    val day: DayNL,
-    val count: Int,
-    val total: Quantity
+data class ProductDetailsResult(
+    val id: ProductId,
+    val name: String,
+    val status: ProductStatus
 )
 ```
 
@@ -531,167 +526,164 @@ data class DailyTotalsResult(
 
 #### 5.4.1 Persistence
 
-**AllocationEntity.kt:**
+**ProductEntity.kt:**
 ```kotlin
-package com.company.allocation.infrastructure.persistence
+package com.ecoglobal.productcatalog.infrastructure.persistence
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Table
-import java.time.LocalDate
+import java.util.UUID
 
-@Table(name = "allocation")
-internal data class AllocationEntity(
-    @Id val id: Long?,
-    val ean18: String,
-    val operatingDay: LocalDate,
-    val quantityKwh: Double,
-    val status: String
+@Table(name = "product")
+internal data class ProductEntity(
+    @Id val id: UUID?,
+    val name: String,
+    val description: String,
+    val weightGrams: Int,
+    val status: String,
+    val availableIn: String // Stored as comma-separated string
 )
 ```
 
-**AllocationEntityMappers.kt:**
+**ProductEntityMappers.kt:**
 ```kotlin
-package com.company.allocation.infrastructure.persistence
+package com.ecoglobal.productcatalog.infrastructure.persistence
 
-import com.company.allocation.domain.model.*
-import com.company.common.time.DayNL
-import com.company.common.ean.Ean18
+import com.ecoglobal.productcatalog.domain.model.*
+import com.ecoglobal.common.country.CountryCode
 
-internal fun AllocationEntity.toDomain(): Allocation = Allocation.create(
-    ean18 = Ean18(this.ean18),
-    operatingDay = DayNL(this.operatingDay),
-    quantity = Quantity(this.quantityKwh)
+internal fun ProductEntity.toDomain(): Product = Product.create(
+    name = this.name,
+    description = this.description,
+    weight = Weight(this.weightGrams),
+    availableIn = this.availableIn.split(',').map { CountryCode(it) }.toSet()
 ).let {
     // Reconstitute with ID and status
     it.copy(
-        id = this.id?.let { AllocationId(it) },
-        status = AllocationStatus.valueOf(this.status)
+        id = this.id?.let { ProductId(it) },
+        status = ProductStatus.valueOf(this.status)
     )
 }
 
-internal fun Allocation.toEntity(): AllocationEntity = AllocationEntity(
+internal fun Product.toEntity(): ProductEntity = ProductEntity(
     id = this.id?.value,
-    ean18 = this.ean18.value,
-    operatingDay = this.operatingDay.date,
-    quantityKwh = this.quantity.value,
-    status = this.status.name
+    name = this.name,
+    description = this.description,
+    weightGrams = this.weight.valueGrams,
+    status = this.status.name,
+    availableIn = this.availableIn.joinToString(",") { it.value }
 )
 ```
 
-**AllocationRepositoryImpl.kt:**
+**ProductRepositoryImpl.kt:**
 ```kotlin
-package com.company.allocation.infrastructure.persistence
+package com.ecoglobal.productcatalog.infrastructure.persistence
 
-import com.company.allocation.domain.model.*
-import com.company.allocation.domain.repository.AllocationRepository
-import com.company.common.time.DayNL
+import com.ecoglobal.productcatalog.domain.model.*
+import com.ecoglobal.productcatalog.domain.repository.ProductRepository
+import com.ecoglobal.common.country.CountryCode
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
-import java.time.LocalDate
+import java.util.UUID
 
-/**
- * Implementation of AllocationRepository.
- * Adapts Spring Data JDBC to domain repository interface.
- */
 @Repository
-internal class AllocationRepositoryImpl(
-    private val jdbc: AllocationRepositoryJdbc
-) : AllocationRepository {
+internal class ProductRepositoryImpl(
+    private val jdbc: ProductRepositoryJdbc
+) : ProductRepository {
     
-    override fun save(allocation: Allocation): Allocation =
-        jdbc.save(allocation.toEntity()).toDomain()
+    override fun save(product: Product): Product =
+        jdbc.save(product.toEntity()).toDomain()
     
-    override fun findById(id: AllocationId): Allocation? =
-        jdbc.findById(id.value)
-            .map { it.toDomain() }
-            .orElse(null)
+    override fun findById(id: ProductId): Product? =
+        jdbc.findById(id.value).map { it.toDomain() }.orElse(null)
     
-    override fun findByDay(day: DayNL): List<Allocation> =
-        jdbc.findByOperatingDay(day.date)
-            .map { it.toDomain() }
+    override fun findAvailableIn(country: CountryCode): List<Product> =
+        jdbc.findByAvailableInContaining(country.value).map { it.toDomain() }
 }
 
-internal interface AllocationRepositoryJdbc : CrudRepository<AllocationEntity, Long> {
-    fun findByOperatingDay(operatingDay: LocalDate): List<AllocationEntity>
+internal interface ProductRepositoryJdbc : CrudRepository<ProductEntity, UUID> {
+    fun findByAvailableInContaining(countryCode: String): List<ProductEntity>
 }
 ```
 
 #### 5.4.2 REST Controllers
 
-**AllocationControllerV1.kt:**
+**ProductControllerV1.kt:**
 ```kotlin
-package com.company.allocation.infrastructure.rest.v1
+package com.ecoglobal.productcatalog.infrastructure.rest.v1
 
-import com.company.allocation.application.*
-import com.company.allocation.domain.model.*
-import com.company.common.security.RequiresRoleOperator
-import com.company.common.time.DayNL
-import com.company.common.ean.Ean18
+import com.ecoglobal.productcatalog.application.*
+import com.ecoglobal.productcatalog.domain.model.*
+import com.ecoglobal.common.country.CountryCode
+import com.ecoglobal.common.security.RequiresRoleAdmin
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.time.LocalDate
+import java.util.UUID
 
 /**
- * REST controller for allocation endpoints.
+ * REST controller for product catalog endpoints.
  * Belongs to infrastructure layer, delegates to use cases.
  */
 @RestController
-@RequestMapping("/api/v1/allocations")
-@RequiresRoleOperator
-internal class AllocationControllerV1(
-    private val createAllocationUseCase: CreateAllocationUseCase,
-    private val calculateDailyTotalsUseCase: CalculateDailyTotalsUseCase
+@RequestMapping("/api/v1/products")
+@RequiresRoleAdmin
+internal class ProductControllerV1(
+    private val addProductUseCase: AddProductUseCase,
+    private val getProductDetailsUseCase: GetProductDetailsUseCase
 ) {
     
     @PostMapping
-    fun create(@RequestBody request: CreateAllocationRequestV1): ResponseEntity<AllocationResponseV1> {
+    fun addProduct(@RequestBody request: AddProductRequestV1): ResponseEntity<ProductResponseV1> {
         val command = request.toCommand()
         
-        return createAllocationUseCase.execute(command).fold(
-            onSuccess = { allocationId ->
+        return addProductUseCase.execute(command).fold(
+            onSuccess = { productId ->
                 ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .body(AllocationResponseV1(id = allocationId.value))
+                    .body(ProductResponseV1(id = productId.value))
             },
             onFailure = { throw it }
         )
     }
     
-    @GetMapping("/daily-total")
-    fun getDailyTotal(@RequestParam date: LocalDate): ResponseEntity<DailyTotalResponseV1> {
-        val result = calculateDailyTotalsUseCase.execute(DayNL(date))
-        return ResponseEntity.ok(result.toResponse())
+    @GetMapping("/{id}")
+    fun getProductDetails(@PathVariable id: UUID): ResponseEntity<ProductDetailsResponseV1> {
+        val result = getProductDetailsUseCase.execute(ProductId(id))
+        return result?.let { ResponseEntity.ok(it.toResponse()) }
+            ?: ResponseEntity.notFound().build()
     }
 }
 
-data class CreateAllocationRequestV1(
-    val ean18: String,
-    val operatingDay: LocalDate,
-    val quantityKwh: Double
+data class AddProductRequestV1(
+    val name: String,
+    val description: String,
+    val weightGrams: Int,
+    val availableIn: Set<String>
 )
 
-data class AllocationResponseV1(
-    val id: Long
+data class ProductResponseV1(
+    val id: UUID
 )
 
-data class DailyTotalResponseV1(
-    val date: LocalDate,
-    val count: Int,
-    val totalKwh: Double
+data class ProductDetailsResponseV1(
+    val id: UUID,
+    val name: String,
+    val status: String
 )
 
-// Mappers in same file (infrastructure concern)
-private fun CreateAllocationRequestV1.toCommand() = CreateAllocationCommand(
-    ean18 = Ean18(this.ean18),
-    operatingDay = DayNL(this.operatingDay),
-    quantity = Quantity(this.quantityKwh)
+// Mappers
+private fun AddProductRequestV1.toCommand() = AddProductCommand(
+    name = this.name,
+    description = this.description,
+    weight = Weight(this.weightGrams),
+    availableIn = this.availableIn.map { CountryCode(it) }.toSet()
 )
 
-private fun DailyTotalsResult.toResponse() = DailyTotalResponseV1(
-    date = this.day.date,
-    count = this.count,
-    totalKwh = this.total.value
+private fun ProductDetailsResult.toResponse() = ProductDetailsResponseV1(
+    id = this.id.value,
+    name = this.name,
+    status = this.status.name
 )
 ```
 
@@ -704,14 +696,15 @@ private fun DailyTotalsResult.toResponse() = DailyTotalResponseV1(
 **When strategic design allows, use direct dependencies:**
 
 ```kotlin
-// Supporting domain depending on generic domain (CORRECT - direct dependency)
+// Tax Compliance (supporting) depending on Country Configuration (generic)
 dependencies {
-    implementation("com.company.common:ean")
+    implementation("com.ecoglobal.common:country")
 }
 
-// Supporting domain A depending on supporting domain B (CORRECT - direct dependency)
+// Tax Compliance (supporting) depending on Order Fulfillment (core)
+// This is fine because the dependency points "inward" towards the core domain
 dependencies {
-    implementation(project(":nma:meter-data:meter-data-api"))
+    implementation(project(":ecoglobal:order-fulfillment:order-fulfillment-api"))
 }
 ```
 
@@ -719,81 +712,78 @@ dependencies {
 
 **Use ONLY when dependency direction is wrong according to strategic design:**
 
-**Scenario:** Core domain needs data from supporting domain (wrong direction!)
+**Scenario:** Order Fulfillment (core) needs inventory data from Inventory Management (supporting).
 
 **Step 1: Define interface in CORE domain API:**
 ```kotlin
-// In core-domain-api
-package com.company.imbalance
+// In order-fulfillment-api
+package com.ecoglobal.orderfulfillment.spi
 
-import com.company.common.time.DayNL
+import com.ecoglobal.productcatalog.domain.model.ProductId
+import com.ecoglobal.inventory.domain.model.WarehouseId
 
 /**
- * Provider interface defined by core domain.
+ * Service Provider Interface (SPI) defined by core domain.
  * Implementation will be in supporting domain.
  */
-interface MeterDataProvider {
-    fun getMeterData(day: DayNL): List<MeterReading>
+interface InventoryAvailabilityProvider {
+    fun checkAvailability(productId: ProductId, warehouseId: WarehouseId): Int
 }
-
-data class MeterReading(
-    val ean18: Ean18,
-    val timestampUtc: Instant,
-    val value: Double
-)
 ```
 
 **Step 2: Implement in SUPPORTING domain:**
 ```kotlin
-// In meter-data-impl
-package com.company.meterdata.infrastructure
+// In inventory-impl
+package com.ecoglobal.inventory.infrastructure
 
-import com.company.imbalance.MeterDataProvider
-import com.company.meterdata.application.QueryMeterDataUseCase
+import com.ecoglobal.orderfulfillment.spi.InventoryAvailabilityProvider
+import com.ecoglobal.inventory.application.CheckStockUseCase
 import org.springframework.stereotype.Component
 
 @Component
-internal class MeterDataProviderImpl(
-    private val queryUseCase: QueryMeterDataUseCase
-) : MeterDataProvider {
+internal class InventoryAvailabilityProviderImpl(
+    private val checkStockUseCase: CheckStockUseCase
+) : InventoryAvailabilityProvider {
     
-    override fun getMeterData(day: DayNL): List<MeterReading> {
-        return queryUseCase.execute(day)
-            .map { it.toMeterReading() }
+    override fun checkAvailability(productId: ProductId, warehouseId: WarehouseId): Int {
+        return checkStockUseCase.execute(productId, warehouseId).getOrDefault(0)
     }
 }
 ```
 
 **Step 3: Core domain uses interface:**
 ```kotlin
-// In core-domain-impl
+// In order-fulfillment-impl
 @Service
-class ImbalanceCalculationUseCase(
-    private val meterDataProvider: MeterDataProvider  // Injected
+class FulfillmentOptimizer(
+    private val inventoryProvider: InventoryAvailabilityProvider // Injected
 ) {
-    fun execute(day: DayNL): ImbalanceResult {
-        val meterData = meterDataProvider.getMeterData(day)
-        // Calculate imbalance
+    fun findBestWarehouse(order: Order): WarehouseId {
+        val availableWarehouses = order.items.map {
+            inventoryProvider.checkAvailability(it.productId, WAREHOUSE_NL)
+            // ... logic to find best warehouse
+        }
+        // ...
     }
 }
 ```
 
 **Build dependencies:**
 ```kotlin
-// core-domain-impl build.gradle.kts
+// order-fulfillment-impl build.gradle.kts
 dependencies {
-    // Core domain API (contains interface)
-    api(project(":nma:imbalance:imbalance-api"))
+    // Core domain's own API
+    api(project(":ecoglobal:order-fulfillment:order-fulfillment-api"))
     
-    // NO dependency on meter-data! Dependency is inverted.
+    // NO dependency on inventory-impl! Dependency is inverted.
 }
 
-// meter-data-impl build.gradle.kts
+// inventory-impl build.gradle.kts
 dependencies {
-    implementation(project(":nma:meter-data:meter-data-api"))
+    implementation(project(":ecoglobal:inventory:inventory-api"))
     
-    // Depends on core domain API to implement interface
-    implementation(project(":nma:imbalance:imbalance-api"))
+    // Depends on core domain API to implement the SPI
+    implementation(project(":ecoglobal:order-fulfillment:order-fulfillment-api"))
 }
 ```
 
@@ -804,45 +794,47 @@ Use for:
 - Eventual consistency scenarios
 - Broadcasting state changes
 
-**Publishing Events:**
+**Publishing Events (in Order Fulfillment):**
 ```kotlin
-package com.company.allocation.infrastructure.messaging
+package com.ecoglobal.orderfulfillment.infrastructure.messaging
 
-import com.company.allocation.domain.model.Allocation
+import com.ecoglobal.orderfulfillment.domain.model.Order
+import com.ecoglobal.orderfulfillment.api.events.OrderPlacedEvent
 import org.springframework.jms.core.JmsTemplate
 import org.springframework.stereotype.Component
 
 @Component
-class AllocationEventPublisher(
+class OrderEventPublisher(
     private val jmsTemplate: JmsTemplate
 ) {
-    fun publishCreated(allocation: Allocation) {
-        val event = AllocationCompleteEvent(
-            operatingDay = allocation.operatingDay,
-            allocationCount = 1
+    fun publishOrderPlaced(order: Order) {
+        val event = OrderPlacedEvent(
+            orderId = order.id!!,
+            customerId = order.customerId,
+            // ... other details
         )
-        jmsTemplate.convertAndSend("allocation.complete", event)
+        jmsTemplate.convertAndSend("order.placed", event)
     }
 }
 ```
 
-**Consuming Events:**
+**Consuming Events (in Inventory):**
 ```kotlin
-package com.company.imbalance.infrastructure.messaging
+package com.ecoglobal.inventory.infrastructure.messaging
 
-import com.company.allocation.AllocationCompleteEvent
-import com.company.imbalance.application.StartImbalanceCalculationUseCase
+import com.ecoglobal.orderfulfillment.api.events.OrderPlacedEvent
+import com.ecoglobal.inventory.application.ReserveStockUseCase
 import org.springframework.jms.annotation.JmsListener
 import org.springframework.stereotype.Component
 
 @Component
-internal class AllocationEventConsumer(
-    private val useCase: StartImbalanceCalculationUseCase
+internal class OrderEventConsumer(
+    private val reserveStockUseCase: ReserveStockUseCase
 ) {
     
-    @JmsListener(destination = "allocation.complete")
-    fun handleAllocationComplete(event: AllocationCompleteEvent) {
-        useCase.execute(event.operatingDay)
+    @JmsListener(destination = "order.placed")
+    fun handleOrderPlaced(event: OrderPlacedEvent) {
+        reserveStockUseCase.execute(event.orderId, event.items)
     }
 }
 ```
@@ -873,51 +865,50 @@ internal class AllocationEventConsumer(
 **No Spring, fast, isolated:**
 
 ```kotlin
-package com.company.allocation.domain.model
+package com.ecoglobal.productcatalog.domain.model
 
-import com.company.common.ean.Ean18
-import com.company.common.time.DayNL
+import com.ecoglobal.common.country.CountryCode
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.Test
 
-class AllocationTest {
+class ProductTest {
     
     @Test
-    fun `create should create allocation in draft status`() {
-        // Given
-        val ean18 = Ean18("871687120050264654")
-        val day = DayNL.now()
-        val quantity = Quantity(100.0)
-        
+    fun `create should create product in draft status`() {
         // When
-        val allocation = Allocation.create(ean18, day, quantity)
+        val product = Product.create(
+            name = "Reusable Water Bottle",
+            description = "A stainless steel water bottle.",
+            weight = Weight(200),
+            availableIn = setOf(CountryCode("NL"))
+        )
         
         // Then
-        assertThat(allocation.status).isEqualTo(AllocationStatus.DRAFT)
-        assertThat(allocation.id).isNull()
+        assertThat(product.status).isEqualTo(ProductStatus.DRAFT)
+        assertThat(product.id).isNull()
     }
     
     @Test
-    fun `finalize should change status when draft`() {
+    fun `publish should change status when draft`() {
         // Given
-        val allocation = buildAllocation(status = AllocationStatus.DRAFT)
+        val product = buildProduct(status = ProductStatus.DRAFT)
         
         // When
-        val finalized = allocation.finalize()
+        val published = product.publish()
         
         // Then
-        assertThat(finalized.status).isEqualTo(AllocationStatus.FINALIZED)
+        assertThat(published.status).isEqualTo(ProductStatus.PUBLISHED)
     }
     
     @Test
-    fun `finalize should throw when already finalized`() {
+    fun `publish should throw when not draft`() {
         // Given
-        val allocation = buildAllocation(status = AllocationStatus.FINALIZED)
+        val product = buildProduct(status = ProductStatus.PUBLISHED)
         
         // When & Then
-        assertThatThrownBy { allocation.finalize() }
+        assertThatThrownBy { product.publish() }
             .isInstanceOf(IllegalStateException::class.java)
-            .hasMessage("Can only finalize draft allocations")
+            .hasMessage("Can only publish draft products")
     }
 }
 ```
@@ -927,11 +918,10 @@ class AllocationTest {
 **With Spring, database:**
 
 ```kotlin
-package com.company.allocation.infrastructure.persistence
+package com.ecoglobal.productcatalog.infrastructure.persistence
 
-import com.company.allocation.domain.model.*
-import com.company.common.ean.Ean18
-import com.company.common.time.DayNL
+import com.ecoglobal.productcatalog.domain.model.*
+import com.ecoglobal.common.country.CountryCode
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -942,37 +932,37 @@ import org.springframework.transaction.annotation.Transactional
 @SpringBootTest
 @AutoConfigureEmbeddedDatabase
 @Transactional
-class AllocationRepositoryImplTest {
+class ProductRepositoryImplTest {
     
     @Autowired
-    private lateinit var repository: AllocationRepositoryImpl
+    private lateinit var repository: ProductRepositoryImpl
     
     @Test
-    fun `save should persist allocation and return with ID`() {
+    fun `save should persist product and return with ID`() {
         // Given
-        val allocation = buildAllocation(id = null)
+        val product = buildProduct(id = null)
         
         // When
-        val saved = repository.save(allocation)
+        val saved = repository.save(product)
         
         // Then
         assertThat(saved.id).isNotNull()
-        assertThat(saved.ean18).isEqualTo(allocation.ean18)
+        assertThat(saved.name).isEqualTo(product.name)
     }
     
     @Test
-    fun `findByDay should return allocations for specific day`() {
+    fun `findAvailableIn should return products for specific country`() {
         // Given
-        val day = DayNL.now()
-        val allocation1 = repository.save(buildAllocation(operatingDay = day))
-        val allocation2 = repository.save(buildAllocation(operatingDay = day))
+        val countryNL = CountryCode("NL")
+        val product1 = repository.save(buildProduct(availableIn = setOf(countryNL)))
+        val product2 = repository.save(buildProduct(availableIn = setOf(countryNL, CountryCode("DE"))))
         
         // When
-        val found = repository.findByDay(day)
+        val found = repository.findAvailableIn(countryNL)
         
         // Then
         assertThat(found).hasSize(2)
-        assertThat(found).extracting("id").containsExactlyInAnyOrder(allocation1.id, allocation2.id)
+        assertThat(found).extracting("id").containsExactlyInAnyOrder(product1.id, product2.id)
     }
 }
 ```
@@ -981,77 +971,69 @@ class AllocationRepositoryImplTest {
 
 **Feature file:**
 ```gherkin
-Feature: UC01.1 - Create allocation
-  As an operator
-  I want to create allocations
-  So that energy consumption is tracked
+Feature: UC01 - Add product to catalog
+  As an administrator
+  I want to add new products
+  So they can be sold on the platform
 
-  Scenario: Create valid allocation
-    Given an EAN18 "871687120050264654"
-    And an operating day "2025-01-15"
-    And a quantity of 150.5 kWh
-    When I create the allocation
-    Then the allocation should be saved
-    And the allocation should have an ID
-    And the allocation status should be "DRAFT"
+  Scenario: Add a valid product
+    Given a new product named "Solar-Powered Charger"
+    And a weight of 250 grams
+    And it is available in "NL" and "DE"
+    When I add the product to the catalog
+    Then the product should be saved
+    And the product status should be "DRAFT"
 ```
 
 **Step definitions:**
 ```kotlin
-package com.company.allocation
+package com.ecoglobal.productcatalog
 
-import com.company.allocation.application.*
-import com.company.allocation.domain.model.*
-import com.company.allocation.domain.repository.AllocationRepository
-import com.company.common.ean.Ean18
-import com.company.common.time.DayNL
+import com.ecoglobal.productcatalog.application.*
+import com.ecoglobal.productcatalog.domain.model.*
+import com.ecoglobal.productcatalog.domain.repository.ProductRepository
+import com.ecoglobal.common.country.CountryCode
 import io.cucumber.java8.En
 import org.assertj.core.api.Assertions.*
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDate
 
 @Transactional
-class StepsAllocation(
-    private val createAllocationUseCase: CreateAllocationUseCase,
-    private val allocationRepository: AllocationRepository
+class StepsProductCatalog(
+    private val addProductUseCase: AddProductUseCase,
+    private val productRepository: ProductRepository
 ) : En {
     
-    private lateinit var ean18: Ean18
-    private lateinit var operatingDay: DayNL
-    private lateinit var quantity: Quantity
-    private lateinit var createdId: AllocationId
+    private lateinit var name: String
+    private lateinit var weight: Weight
+    private val availableIn = mutableSetOf<CountryCode>()
+    private lateinit var createdId: ProductId
     
     init {
-        Given("an EAN18 {string}") { value: String ->
-            ean18 = Ean18(value)
+        Given("a new product named {string}") { value: String ->
+            name = value
         }
         
-        Given("an operating day {string}") { date: String ->
-            operatingDay = DayNL(LocalDate.parse(date))
+        Given("a weight of {int} grams") { value: Int ->
+            weight = Weight(value)
         }
         
-        Given("a quantity of {double} kWh") { value: Double ->
-            quantity = Quantity(value)
+        Given("it is available in {string} and {string}") { cc1: String, cc2: String ->
+            availableIn.add(CountryCode(cc1))
+            availableIn.add(CountryCode(cc2))
         }
         
-        When("I create the allocation") {
-            val command = CreateAllocationCommand(ean18, operatingDay, quantity)
-            val result = createAllocationUseCase.execute(command)
-            createdId = result.getOrThrow()
+        When("I add the product to the catalog") {
+            val command = AddProductCommand(name, "description", weight, availableIn)
+            createdId = addProductUseCase.execute(command).getOrThrow()
         }
         
-        Then("the allocation should be saved") {
-            val found = allocationRepository.findById(createdId)
-            assertThat(found).isNotNull
+        Then("the product should be saved") {
+            assertThat(productRepository.findById(createdId)).isNotNull
         }
         
-        Then("the allocation should have an ID") {
-            assertThat(createdId.value).isGreaterThan(0)
-        }
-        
-        Then("the allocation status should be {string}") { status: String ->
-            val allocation = allocationRepository.findById(createdId)
-            assertThat(allocation?.status).isEqualTo(AllocationStatus.valueOf(status))
+        Then("the product status should be {string}") { status: String ->
+            val product = productRepository.findById(createdId)
+            assertThat(product?.status).isEqualTo(ProductStatus.valueOf(status))
         }
     }
 }
@@ -1063,9 +1045,9 @@ class StepsAllocation(
 
 Each bounded context needs a Spring configuration:
 
-**AllocationModule.kt:**
+**ProductCatalogModule.kt:**
 ```kotlin
-package com.company.allocation
+package com.ecoglobal.productcatalog
 
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
@@ -1074,15 +1056,15 @@ import org.springframework.data.jdbc.repository.config.EnableJdbcRepositories
 @Configuration
 @ComponentScan(
     basePackages = [
-        "com.company.allocation.application",
-        "com.company.allocation.domain",
-        "com.company.allocation.infrastructure"
+        "com.ecoglobal.productcatalog.application",
+        "com.ecoglobal.productcatalog.domain",
+        "com.ecoglobal.productcatalog.infrastructure"
     ]
 )
 @EnableJdbcRepositories(
-    basePackages = ["com.company.allocation.infrastructure.persistence"]
+    basePackages = ["com.ecoglobal.productcatalog.infrastructure.persistence"]
 )
-class AllocationModule
+class ProductCatalogModule
 ```
 
 ---
@@ -1093,7 +1075,7 @@ The application module is the deployable artifact:
 
 **Application.kt:**
 ```kotlin
-package com.company
+package com.ecoglobal
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan
@@ -1101,10 +1083,9 @@ import org.springframework.boot.runApplication
 
 @SpringBootApplication(
     scanBasePackages = [
-        "com.company.allocation",
-        "com.company.imbalance",
-        "com.company.trading",
-        "com.company.config"
+        "com.ecoglobal.orderfulfillment",
+        "com.ecoglobal.productcatalog",
+        "com.ecoglobal.config"
     ]
 )
 @ConfigurationPropertiesScan
@@ -1125,13 +1106,12 @@ plugins {
 
 dependencies {
     // Domain implementations
-    implementation(project(":nma:allocation:allocation-impl"))
-    implementation(project(":nma:imbalance:imbalance-impl"))
-    implementation(project(":nma:trading:trading-impl"))
+    implementation(project(":ecoglobal:order-fulfillment:order-fulfillment-impl"))
+    implementation(project(":ecoglobal:product-catalog:product-catalog-impl"))
+    implementation(project(":ecoglobal:inventory:inventory-impl"))
     
     // Common modules
-    implementation("com.company.common:time")
-    implementation("com.company.common:ean")
+    implementation("com.ecoglobal.common:country")
     
     // Spring Boot
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -1141,7 +1121,6 @@ dependencies {
     // Database
     implementation("org.postgresql:postgresql")
     implementation("org.flywaydb:flyway-core")
-    implementation("org.flywaydb:flyway-database-postgresql")
     
     // Messaging
     implementation("jakarta.jms:jakarta.jms-api")
@@ -1187,12 +1166,12 @@ dependencies {
 ### ❌ Anemic Domain Model
 ```kotlin
 // DON'T: Logic outside domain objects
-class AllocationService {
-    fun finalize(allocation: Allocation) {
-        if (allocation.status != AllocationStatus.DRAFT) {
+class ProductService {
+    fun publish(product: Product) {
+        if (product.status != ProductStatus.DRAFT) {
             throw IllegalStateException("...")
         }
-        allocation.status = AllocationStatus.FINALIZED
+        product.status = ProductStatus.PUBLISHED
     }
 }
 ```
@@ -1200,10 +1179,10 @@ class AllocationService {
 ### ✅ Rich Domain Model
 ```kotlin
 // DO: Behavior in domain objects
-data class Allocation {
-    fun finalize(): Allocation {
-        check(status == AllocationStatus.DRAFT) { "..." }
-        return copy(status = AllocationStatus.FINALIZED)
+data class Product {
+    fun publish(): Product {
+        check(status == ProductStatus.DRAFT) { "..." }
+        return copy(status = ProductStatus.PUBLISHED)
     }
 }
 ```
@@ -1211,31 +1190,32 @@ data class Allocation {
 ### ❌ Unnecessary Dependency Inversion
 ```kotlin
 // DON'T: Invert when not needed
-// If supporting domain can depend on another supporting domain, just do it!
-implementation(project(":meter-data-api"))  // Direct is fine
+// If logistics (supporting) can depend on product-catalog (supporting), just do it!
+implementation(project(":ecoglobal:product-catalog:product-catalog-api"))
 ```
 
 ### ❌ Primitive Obsession
 ```kotlin
 // DON'T: Use primitives for domain concepts
-data class Allocation(
-    val ean18: String,  // Should be Ean18 value object
-    val quantityKwh: Double  // Should be Quantity value object
+data class Product(
+    val name: String,
+    val weightGrams: Int, // Should be Weight value object
+    val countryCode: String // Should be CountryCode value object
 )
 ```
 
 ### ❌ Repository per Table
 ```kotlin
 // DON'T: Repository for every entity
-interface AllocationRepository
-interface AllocationLineRepository  // NO!
-interface AllocationMetadataRepository  // NO!
+interface ProductRepository
+interface ProductCertificationRepository // NO!
+interface ProductCountryAvailabilityRepository // NO!
 ```
 
 ### ✅ Repository per Aggregate
 ```kotlin
 // DO: One repository for aggregate root
-interface AllocationRepository {
-    fun save(allocation: Allocation): Allocation  // Saves entire aggregate
+interface ProductRepository {
+    fun save(product: Product): Product // Saves entire aggregate
 }
 ```
