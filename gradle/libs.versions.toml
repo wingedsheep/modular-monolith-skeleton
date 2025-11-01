@@ -1,0 +1,39 @@
+[versions]
+arcmutate-pitest = "2.2.3"
+dependency-analysis = "3.1.0"
+error-prone = "2.36.0"
+java = "21"
+junit = "5.11.4"
+kotlin = "2.2.20"
+mockito = "5.14.2"
+mockito-kotlin = "5.4.0"
+mockk = "1.13.14"
+pitest = "1.18.1"
+pitest-junit5-plugin = "1.2.1"
+spring-boot = "3.5.4"
+cucumber = "7.14.0"
+
+[libraries]
+arcmutate-gradle-common = { module = "com.arcmutate.gradle:common", version.ref = "arcmutate-pitest" }
+error-prone = { module = "com.google.errorprone:error_prone_core", version.ref = "error-prone" }
+mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito-kotlin" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+pitest-accelerator-junit5 = { module = "com.groupcdg.arcmutate:accelerator-junit5", version.ref = "arcmutate-pitest" }
+pitest-arcmutate-spring = { module = "com.groupcdg.arcmutate:arcmutate-spring", version.ref = "arcmutate-pitest" }
+pitest-git-plugin = { module = "io.github.cakekindel:git-maven-plugin", version = "0.1.4" }
+pitest-kotlin-plugin = { module = "io.github.cakekindel:pitest-kotlin-plugin", version = "1.3.0" }
+cucumber-java = { module = "io.cucumber:cucumber-java", version.ref = "cucumber" }
+cucumber-junit-platform-engine = { module = "io.cucumber:cucumber-junit-platform-engine", version.ref = "cucumber" }
+cucumber-spring = { module = "io.cucumber:cucumber-spring", version.ref = "cucumber" }
+
+[plugins]
+arcmutate-github = { id = "com.arcmutate.github", version.ref = "arcmutate-pitest" }
+dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "dependency-analysis" }
+download = { id = "de.undercouch.download", version = "5.6.0" }
+errorprone = { id = "net.ltgt.errorprone", version = "4.3.0" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+pitest = { id = "info.solidsoft.pitest", version = "1.15.0" }
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spring-dependency-management = { id = "io.spring.dependency-management", version = "1.1.7" }

@@ -13,12 +13,12 @@ Complete checklist for implementing the EcoGlobal sustainable products platform.
 ### 0.1 Repository Structure
 - [x] Create root project structure with `build-logic`, `common`, `ecoglobal` folders
 - [x] Set up `build-logic` folder with convention plugins
-- [ ] Create `buildlogic.kotlin-conventions.gradle.kts`
-- [ ] Create `buildlogic.cucumber-conventions.gradle.kts`
-- [ ] Create `buildlogic.jacoco-conventions.gradle.kts`
-- [ ] Create `buildlogic.errorprone.gradle.kts`
-- [ ] Create `buildlogic.project-root.gradle.kts`
-- [ ] Create `libs.versions.toml` with all dependencies
+- [x] Create `buildlogic.kotlin-conventions.gradle.kts`
+- [x] Create `buildlogic.cucumber-conventions.gradle.kts`
+- [x] Create `buildlogic.jacoco-conventions.gradle.kts`
+- [x] Create `buildlogic.errorprone.gradle.kts`
+- [x] Create `buildlogic.project-root.gradle.kts`
+- [x] Create `libs.versions.toml` with all dependencies
 - [x] Create root `build.gradle.kts`
 - [x] Create root `settings.gradle.kts` (initially empty, will add modules as we go)
 - [x] Create `gradle.properties` with configuration
@@ -41,13 +41,13 @@ Complete checklist for implementing the EcoGlobal sustainable products platform.
 - [x] Test: Application starts successfully
 
 ### 0.4 Test Infrastructure
-- [ ] Create `ecoglobal/test/use-case` module structure
-- [ ] Create `build.gradle.kts` for use-case tests
-- [ ] Create `CucumberSpringBootTest.kt`
-- [ ] Create `CucumberTestRunner.kt`
-- [ ] Create `SpringTransactionHooks.kt`
-- [ ] Create `src/test/resources/features` folder structure
-- [ ] Test: Cucumber runner executes (with no features yet)
+- [x] Create `ecoglobal/test/use-case` module structure
+- [x] Create `build.gradle.kts` for use-case tests
+- [x] Create `CucumberSpringBootTest.kt`
+- [x] Create `CucumberTestRunner.kt`
+- [x] Create `SpringTransactionHooks.kt`
+- [x] Create `src/test/resources/features` folder structure
+- [x] Test: Cucumber runner executes (with no features yet)
 
 ### 0.5 Documentation
 - [ ] Create `README.md` with project overview
