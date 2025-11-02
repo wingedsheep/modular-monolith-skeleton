@@ -21,4 +21,5 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Build and test with Gradle
+        working-directory: ./ecoglobal
         run: ./gradlew build
