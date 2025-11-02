@@ -4,6 +4,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":ecoglobal:product-catalog:product-catalog-impl"))
+    implementation(project(":product-catalog:product-catalog-impl"))
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-security")
 }
