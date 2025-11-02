@@ -141,22 +141,22 @@ Complete checklist for implementing the EcoGlobal sustainable products platform.
 - [x] Add dependency in application module
 
 ### 2.2 Domain Model (in -impl)
-- [ ] Create `domain/model/Product.kt` aggregate root
-- [ ] Create `domain/model/ProductId.kt` value object
-- [ ] Create `domain/model/ProductName.kt` value object
-- [ ] Create `domain/model/SustainabilityRating.kt` enum (A_PLUS to F)
-- [ ] Create `domain/model/Certification.kt` enum (EU_ECOLABEL, FAIR_TRADE, etc.)
-- [ ] Create `domain/model/PackagingType.kt` enum (RECYCLABLE_CARDBOARD, etc.)
-- [ ] Create `domain/model/ProductCategory.kt` enum (SOLAR_PANELS, CONTAINERS, TEXTILES)
-- [ ] Create factory method `Product.create()` with validation
-- [ ] Unit test: `ProductTest.kt` for invariants and business rules
+- [x] Create `domain/model/Product.kt` aggregate root
+- [x] Create `domain/model/ProductId.kt` value object
+- [x] Create `domain/model/ProductName.kt` value object
+- [x] Create `domain/model/SustainabilityRating.kt` enum (A_PLUS to F)
+- [x] Create `domain/model/Certification.kt` enum (EU_ECOLABEL, FAIR_TRADE, etc.)
+- [x] Create `domain/model/PackagingType.kt` enum (RECYCLABLE_CARDBOARD, etc.)
+- [x] Create `domain/model/ProductCategory.kt` enum (SOLAR_PANELS, CONTAINERS, TEXTILES)
+- [x] Create factory method `Product.create()` with validation
+- [x] Unit test: `ProductTest.kt` for invariants and business rules
 
 ### 2.3 Repository (in -impl)
-- [ ] Create `domain/repository/ProductRepository.kt` interface
-- [ ] Create `infrastructure/persistence/ProductEntity.kt`
-- [ ] Create `infrastructure/persistence/ProductEntityMappers.kt`
-- [ ] Create `infrastructure/persistence/ProductRepositoryImpl.kt`
-- [ ] Create `infrastructure/persistence/ProductRepositoryJdbc.kt` interface
+- [x] Create `domain/repository/ProductRepository.kt` interface
+- [x] Create `infrastructure/persistence/ProductEntity.kt`
+- [x] Create `infrastructure/persistence/ProductEntityMappers.kt`
+- [x] Create `infrastructure/persistence/ProductRepositoryImpl.kt`
+- [x] Create `infrastructure/persistence/ProductRepositoryJdbc.kt` interface
 
 ### 2.4 Use Cases (in -impl)
 - [ ] Create `application/CreateProductUseCase.kt`
@@ -173,11 +173,11 @@ Complete checklist for implementing the EcoGlobal sustainable products platform.
 - [ ] Create `infrastructure/rest/internal/ProductInternalController.kt` for operators
 
 ### 2.6 Database (in application)
-- [ ] Create migration `V001__create_product_catalog_schema.sql`
-- [ ] Create `product` table with all fields
-- [ ] Create `product_certifications` junction table
+- [x] Create migration `V001__create_product_catalog_schema.sql`
+- [x] Create `product` table with all fields
+- [x] Create `product_certifications` junction table
 - [ ] Create `product_country_availability` table
-- [ ] Create indexes on `product(category)`, `product(sustainability_rating)`
+- [x] Create indexes on `product(category)`, `product(sustainability_rating)`
 
 ### 2.7 Events (in -api)
 - [ ] Create `ProductCreatedEvent.kt` data class
